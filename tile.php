@@ -79,12 +79,14 @@ if( isset($_GET['tileset']) && preg_match('/^[\w\d_-]+$/', $_GET['tileset']) ) {
 		try{
 			$db = new PDO('sqlite:'.$layer.'.mbtiles');
 			$params = readparams($db);
+			$bounds = isset($params['bounds']) ? explode(',',$params['bounds']) : array(-180,-90,180,90);
+			$center = isset($params['center']) ? explode(',',$params['center']) : array(0,0,0);
 			?><TileMap version="1.0.0" tilemapservice="<?=$basetms ?>1.0.0/">
 				<Title><?=htmlspecialchars($params['name']) ?></Title>
 				<Abstract><?=htmlspecialchars($params['description']) ?></Abstract>
 				<SRS>OSGEO:41001</SRS>
-				<BoundingBox minx="-180" miny="-90" maxx="180" maxy="90" />
-				<Origin x="0" y="0"/>
+				<BoundingBox minx="<?=$bounds[0] ?>" miny="<?=$bounds[1] ?>" maxx="<?=$bounds[2] ?>" maxy="<?=$bounds[3] ?>" />
+				<Origin x="<?=$center[0] ?>" y="<?=$center[1] ?>"/>
 				<TileFormat width="256" height="256" mime-type="image/<?=$params['format'] == 'jpg' ? 'jpeg' : 'png' ?>" extension="<?=$params['format']?>"/>
 				<TileSets profile="global-mercator">
 <? foreach( readzooms($db) as $zoom ) { ?>
@@ -113,6 +115,8 @@ if( isset($_GET['tileset']) && preg_match('/^[\w\d_-]+$/', $_GET['tileset']) ) {
 					print '<p>Type: '.$params['type'].', format: '.$params['format'].', version: '.$params['version'].'</p>';
 					if( isset($params['bounds']) )
 						print '<p>Bounds: '.str_replace(',', ', ',$params['bounds']).'</p>';
+					if( isset($params['center']) )
+						print '<p>Center: '.str_replace(',', ', ',$params['center']).'</p>';
 					print '<p>Zoom levels: '.implode(', ', $zooms).'</p>';
 					print '<p>OpenLayers: <tt>new OpenLayers.Layer.OSM("'.htmlspecialchars($params['name']).'", "'.getbaseurl().preg_replace('/\.mbtiles/','',$file).'/${z}/${x}/${y}", {numZoomLevels: '.(end($zooms)+1).', isBaseLayer: '.($params['type']=='baselayer'?'true':'false').'});</tt></p>';
 					print '<p>TMS: <tt>http://'.$_SERVER['HTTP_HOST'].preg_replace('/\/[^\/]+$/','/',$_SERVER['REQUEST_URI']).'1.0.0/'.preg_replace('/\.mbtiles/','',$file).'</tt></p>';
