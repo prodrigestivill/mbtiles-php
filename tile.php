@@ -1,4 +1,4 @@
-<?
+<?php
 header('Access-Control-Allow-Origin: *');
 if( isset($_GET['tileset']) && preg_match('/^[\w\d_-]+$/', $_GET['tileset']) ) {
 	$tileset = $_GET['tileset'];
@@ -50,30 +50,32 @@ if( isset($_GET['tileset']) && preg_match('/^[\w\d_-]+$/', $_GET['tileset']) ) {
 	print '<?xml version="1.0" encoding="UTF-8" ?>';
 	$basetms = getbaseurl();
 	if( $_GET['tmsinfo'] == 'root' ) {
-		?><Services>
+		?>
+			<Services>
 			<TileMapService title="MBTiles PHP TMS" version="1.0.0" href="http://<?=$basetms ?>1.0.0/" />
 			</Services>
-			<?
+			<?php
 	} elseif( $_GET['tmsinfo'] == 'service' ) {
-		?> <TileMapService version="1.0.0" services="<?=$basetms ?>">
+		?>
+			<TileMapService version="1.0.0" services="<?=$basetms ?>">
 			<Title>MBTiles PHP TMS</Title>
 			<Abstract />
 			<TileMaps>
-<?	if( $handle = opendir('.') ) {
+<?php	if( $handle = opendir('.') ) {
 		while( ($file = readdir($handle)) !== false ) {
 			if( preg_match('/^[\w\d_-]+\.mbtiles$/', $file) && is_file($file) ) {
 				try {
 					$db = new PDO('sqlite:'.$file);
 					$params = readparams($db);
 ?>			<TileMap title="<?=htmlspecialchars($params['name']) ?>" srs="OSGEO:41001" profile="global-mercator" href="<?=$basetms.'1.0.0/'.str_replace('.mbtiles','',$file) ?>" />
-<?				} catch( PDOException $e ) {}
+<?php				} catch( PDOException $e ) {}
 			}
 		}
 	}
 ?>
 			</TileMaps>
 			</TileMapService>
-			<?
+			<?php
 	} elseif( $_GET['tmsinfo'] == 'resource' && isset($_GET['tmslayer'])  && preg_match('/^[\w\d_-]+$/', $_GET['tmslayer']) ) {
 		$layer = $_GET['tmslayer'];
 		try{
@@ -81,7 +83,8 @@ if( isset($_GET['tileset']) && preg_match('/^[\w\d_-]+$/', $_GET['tileset']) ) {
 			$params = readparams($db);
 			$bounds = isset($params['bounds']) ? explode(',',$params['bounds']) : array(-180,-90,180,90);
 			$center = isset($params['center']) ? explode(',',$params['center']) : array(0,0,0);
-			?><TileMap version="1.0.0" tilemapservice="<?=$basetms ?>1.0.0/">
+			?>
+				<TileMap version="1.0.0" tilemapservice="<?=$basetms ?>1.0.0/">
 				<Title><?=htmlspecialchars($params['name']) ?></Title>
 				<Abstract><?=htmlspecialchars($params['description']) ?></Abstract>
 				<SRS>OSGEO:41001</SRS>
@@ -89,12 +92,12 @@ if( isset($_GET['tileset']) && preg_match('/^[\w\d_-]+$/', $_GET['tileset']) ) {
 				<Origin x="<?=$center[0] ?>" y="<?=$center[1] ?>"/>
 				<TileFormat width="256" height="256" mime-type="image/<?=$params['format'] == 'jpg' ? 'jpeg' : 'png' ?>" extension="<?=$params['format']?>"/>
 				<TileSets profile="global-mercator">
-<? foreach( readzooms($db) as $zoom ) { ?>
+<?php foreach( readzooms($db) as $zoom ) { ?>
 					<TileSet href="<?=$basetms.'1.0.0/'.$layer.'/'.$zoom ?>" units-per-pixel="<?=78271.516 / pow(2, $zoom) ?>" order="<?=$zoom ?>" />
-<? } ?>
+<?php } ?>
 				</TileSets>
 				</TileMap>
-				<?
+				<?php
 		} catch( PDOException $e ) {}
 	}
 } else {
@@ -149,4 +152,3 @@ function readzooms( $db ) {
 	}
 	return $zooms;
 }
-?>
